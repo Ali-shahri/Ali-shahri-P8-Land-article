@@ -1,0 +1,233 @@
+%=================================================================
+% MDPI "Land" manuscript - GeoAI afforestation suitability screening, Viborg
+% Baseret på det officielle MDPI LaTeX-template (MDPI_template_ACS, v20260728)
+%
+% SÅDAN BRUGER DU FILEN:
+%  - Alle steder markeret med  % >>> UDFYLD  skal du rette.
+%  - Alle kommentarer på dansk er skrivevejledning. Slet dem inden submission.
+%  - Skift "submit" til "accept" gør INTET nu - det er redaktionen der gør det.
+%=================================================================
+
+\documentclass[land,article,submit,moreauthors]{Definitions/mdpi}
+
+%=================================================================
+% MDPI interne kommandoer - lad dem stå
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{ }
+\daterevised{ }
+\dateaccepted{ }
+\datepublished{ }
+
+%=================================================================
+% TITEL
+% Tip: titlen skal kunne læses af en planlægger OG af en fjernanalyse-forsker.
+% >>> UDFYLD - vælg én af arbejdstitlerne herunder, eller skriv din egen
+\Title{Screening for Afforestation Suitability with Machine Learning and Spatially Cross-Validated Models: A Municipal-Scale GeoAI Workflow for Denmark's Green Tripartite Agreement}
+
+% Kort titel til sidehoved (valgfri, redaktionen kan fjerne den)
+%\TitleCitation{Machine Learning Screening for Afforestation Suitability in Denmark}
+
+% ORCID - >>> UDFYLD (opret gratis på orcid.org hvis du ikke har et)
+\newcommand{\orcidauthorA}{0000-0000-0000-000X}
+\newcommand{\orcidauthorB}{0000-0000-0000-000X}
+\newcommand{\orcidauthorC}{0000-0000-0000-000X}
+
+% FORFATTERE - >>> UDFYLD rækkefølge og korresponderende forfatter
+\Author{Ali Shahri $^{1}$\orcidA{}, Arvin Kashkouli $^{1}$\orcidB{} and Jamal Jokar Arsanjani $^{1,}$*\orcidC{}}
+
+\AuthorNames{Ali Shahri, Arvin Kashkouli and Jamal Jokar Arsanjani}
+
+% AFFILIATION - MDPI kræver fuld postadresse (by, postnr., land)
+\address{%
+$^{1}$ \quad Department of Sustainability and Planning, Aalborg University Copenhagen, A.C. Meyers Vænge 15, 2450 Copenhagen SV, Denmark; ashahr20@student.aau.dk (A.S.); [email] (A.K.); jaju@plan.aau.dk (J.J.A.)}
+
+\corres{Correspondence: jaju@plan.aau.dk}
+
+%=================================================================
+% ABSTRACT - max ca. 200 ord, ÉT afsnit, ingen overskrifter.
+% Struktur (uden at skrive labels): (1) Baggrund/formål (2) Metode (3) Resultater (4) Konklusion.
+% Husk: alle tal du nævner her SKAL også stå i teksten.
+% >>> UDFYLD - skriv til sidst, når resten er færdig
+\abstract{(1) Background: ... (2) Methods: ... (3) Results: ... (4) Conclusions: ...}
+
+% KEYWORDS - 3 til 10. Bland "metode-ord" og "emne-ord" så artiklen kan findes.
+% >>> UDFYLD/juster
+\keyword{afforestation; land-use planning; GeoAI; machine learning; LightGBM; spatial cross-validation; positive-unlabelled learning; SHAP; nitrogen retention; Denmark}
+
+%=================================================================
+\begin{document}
+
+%=================================================================
+\section{Introduction}
+% MÅL: ca. 1200-1600 ord. Fire bevægelser, i denne rækkefølge:
+%
+% 1) Bred kontekst: skovrejsning som multifunktionelt virkemiddel (klima, kvælstof,
+%    drikkevand, biodiversitet). Hvorfor arealkonkurrence gør prioritering nødvendig.
+% 2) Den konkrete case: Grøn Trepart, ~250.000 ha ny skov nationalt, ~950 ha i Viborg
+%    inden 2030. Forklar KORT for et internationalt publikum - de kender ikke Danmark.
+% 3) Forskningshullet: hvad findes allerede (MCDA/AHP-baseret egnethedskortlægning,
+%    ML til landskabsegnethed) og hvad mangler: (a) hård juridisk eligibility adskilt
+%    fra blød egnethed, (b) rumlig krydsvalidering i stedet for tilfældig, (c)
+%    håndtering af at man kun har positive eksempler (eksisterende skov), ikke negative.
+% 4) Bidrag + hvad artiklen viser. Skriv 3-4 nummererede bidrag. Slut med
+%    en sætning om struktur ELLER drop den (MDPI kræver den ikke).
+%
+% CITATIONER: [1] eller [1,3] eller [1--3], FØR punktum. Mål: 40-60 referencer.
+
+\section{Materials and Methods}
+% MÅL: ca. 2000-2500 ord. Dette er artiklens vigtigste sektion - reviewerne
+% dømmer den hårdest. Skriv så en anden kan gentage arbejdet.
+
+\subsection{Study Area}
+% Viborg Kommune: areal, arealanvendelse, jordtyper, nuværende skovdække,
+% hvorfor netop denne kommune (skovrejsningsmål, datatilgængelighed).
+% Figur 1: oversigtskort (Danmark-indsæt + kommunen).
+
+\subsection{Data}
+% Tabel 1: ÉN tabel med alle inputlag. Kolonner:
+% Layer | Source | Native resolution/scale | Year | Use (eligibility / predictor / label)
+% Det er den tabel reviewere kigger på først. Brug den til at spare plads i teksten.
+
+\subsection{Eligibility Masking}
+% Forklar princippet: eligibility (må man overhovedet?) er IKKE det samme som
+% suitability (er det et godt sted?). Hårde juridiske og tilskudsmæssige udelukkelser
+% (A1-A13 samt B-kriterier) anvendes FØR modellen.
+% Tabel 2: constraint-tabel med lovhjemmel og bufferafstand.
+% Nævn resultatet her kort (60.345 ha, 42,1 %) eller gem det til Results - vælg ét sted.
+
+\subsection{Predictor Variables}
+% De 17 variable, grupperet: terræn, hydrologi/vådhed (TWI), jordbund,
+% miljømål (N-retention), infrastrukturafstande, planlægningslag.
+% Angiv opløsning, reprojicering (EPSG:25832) og hvordan afstandsrastre er lavet.
+
+\subsection{Training Data and the Label Problem}
+% VIGTIGT - dette er et af artiklens stærkeste bidrag. Forklar:
+% - Positive labels = eksisterende skov (Digitalt Skovkort 2022).
+% - Der findes ingen ægte negative: uskovede arealer er "unlabelled", ikke "uegnede".
+% - Derfor PU-learning (Elkan & Noto 2008; Bekker & Davis 2020) som følsomhedsmodel.
+% - Dobbeltrollen: eksisterende skov bruges som labels, men udelukkes fra
+%   prædiktionsområdet. Skriv det eksplicit - ellers spørger en reviewer.
+% - 39.904 træningssamples, sampling-strategi, klassebalance.
+
+\subsection{Data Leakage Screening}
+% Hvordan 6 variable blev fjernet (dist_existing_forest, lc_dense_vegetation,
+% lc_field, lc_shallow_vegetation, forest_density_500m, agricultural_value),
+% og hvorfor v4 med AUC = 1,0 blev forkastet som cirkulær.
+% Dette er ærligt og reviewere belønner det. Behold det.
+
+\subsection{Model Training and Spatial Cross-Validation}
+% LightGBM, Random Forest, PU-LightGBM. Hyperparametre i tabel eller appendiks.
+% 9-fold k-means rumlig krydsvalidering: forklar HVORFOR (rumlig autokorrelation
+% giver kunstigt høj AUC ved tilfældig opdeling; Meyer & Pebesma 2022).
+% Figur: kort over de 9 folds.
+
+\subsection{Model Interpretation}
+% SHAP, hvordan værdierne er aggregeret, hvad de kan og ikke kan sige.
+
+\subsection{Hotspot Delineation}
+% Top-10 %-tærskel, morfologisk åbning 20 m, minimumsareal 1 ha,
+% aggregering til markblokke. Begrund hvert valg med planlægningsanvendelighed.
+
+%=================================================================
+\section{Results}
+% MÅL: ca. 1200-1800 ord. KUN resultater - ingen fortolkning her.
+% Foreslået figur/tabel-budget (MDPI har ingen grænse, men 6-8 figurer + 3-4
+% tabeller er det læsere kan rumme):
+%
+% Fig. 1  Studieområde
+% Fig. 2  Workflow-diagram (eligibility -> predictors -> model -> hotspots)
+% Fig. 3  Eligibility-maske
+% Fig. 4  Sandsynlighedskort (LightGBM)
+% Fig. 5  SHAP - variabelbetydning
+% Fig. 6  Hotspots + triple-consensus-zone
+% Fig. 7  Bivariat kort: egnethed x dyrkningsværdi
+% Tab. 3  Modelperformance (AUC ± SD på tværs af folds, alle 3 modeller)
+% Tab. 4  Modelenighed (Pearson, Spearman, Jaccard)
+%
+% Alle figurer: min. 600 dpi, PNG/TIFF/JPEG, engelsk tekst, punktum som decimaltegn.
+
+\subsection{Eligible Area}
+\subsection{Model Performance under Spatial Cross-Validation}
+\subsection{Variable Importance}
+\subsection{Hotspots and Cross-Model Agreement}
+
+%=================================================================
+\section{Discussion}
+% MÅL: ca. 1200-1600 ord. Her hører fortolkningen hjemme.
+%
+% 1) Hvad betyder AUC ~0,73 under rumlig krydsvalidering? Sammenlign med
+%    litteratur der rapporterer 0,90+ under tilfældig validering - pointen er at
+%    tallene ikke er sammenlignelige. Dette er et selvstændigt bidrag.
+% 2) Hvad driver egnetheden (N-retention, afstand til højspænding, terræn) og
+%    er det planlægningsmæssigt meningsfuldt?
+% 3) Modelenighed som usikkerhedsmål: triple-consensus-zonen (4.529 ha) som
+%    det planlæggere bør se på først.
+% 4) LIMITATIONS - skriv dem selv, tydeligt. Reviewere finder dem alligevel:
+%    - eksisterende skov afspejler historiske beslutninger, ikke optimalitet
+%    - kommunale skovrejsningszoner er ikke ground truth
+%    - én kommune, ikke valideret på tværs af landet
+%    - tilskudsstabling begrænser reel multifunktionalitet pr. hektar
+% 5) Overførbarhed: hvad skal der til for national opskalering.
+% 6) Screening != afgørelse. Sig det eksplicit, mindst én gang.
+
+%=================================================================
+\section{Conclusions}
+% 150-250 ord. Ingen nye tal, ingen nye referencer.
+
+%=================================================================
+% BAGGRUNDSAFSNIT - alle er obligatoriske hos MDPI (undtagen dem der er
+% kommenteret ud). Udfyld dem inden submission.
+
+%\supplementary{The following supporting information can be downloaded at \linksupplementary{s1}: Figure S1: title; Table S1: title.}
+
+% >>> UDFYLD med CRediT-roller. Se https://credit.niso.org/
+\authorcontributions{Conceptualization, A.S., A.K. and J.J.A.; methodology, A.S. and A.K.; software, A.S. and A.K.; validation, A.S., A.K. and J.J.A.; formal analysis, A.S.; investigation, A.S. and A.K.; data curation, A.S. and A.K.; writing---original draft preparation, A.S.; writing---review and editing, A.K. and J.J.A.; visualization, A.S.; supervision, J.J.A. All authors have read and agreed to the published version of the manuscript.}
+
+% >>> UDFYLD - hvis ingen ekstern finansiering, lad stå som det er
+\funding{This research received no external funding.}
+
+\institutionalreview{Not applicable.}
+
+\informedconsent{Not applicable.}
+
+% >>> UDFYLD - overvej at lægge kode på GitHub/Zenodo og få et DOI. Det styrker
+% artiklen markant og MDPI opfordrer eksplicit til det.
+\dataavailability{The data presented in this study are derived from public domain resources: [list kilder og URL'er]. The code supporting the findings of this study is openly available at [repository/DOI].}
+
+% >>> UDFYLD - husk GenAI-erklæring hvis relevant (se MDPI's ordlyd)
+\acknowledgments{}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+% Forkortelser - MDPI vil gerne have dem samlet
+\abbreviations{Abbreviations}{%
+The following abbreviations are used in this manuscript:\\
+
+\noindent
+\begin{tabular}{@{}ll}
+AUC & Area Under the Receiver Operating Characteristic Curve\\
+DTM & Digital Terrain Model\\
+GBDT & Gradient Boosting Decision Trees\\
+PU & Positive-Unlabelled\\
+RF & Random Forest\\
+SHAP & SHapley Additive exPlanations\\
+TWI & Topographic Wetness Index
+\end{tabular}
+}
+
+%=================================================================
+\reftitle{References}
+
+% Variant A - ekstern BibTeX (anbefalet: brug Zotero med MDPI-stilen)
+\externalbibliography{yes}
+\bibliography{references}
+
+\end{document}
