@@ -1,7 +1,6 @@
 % ============================================================
-% references.bib  –  MDPI Land article (P8)
-% Tilføj resten fra Zotero med MDPI-stilen
-% (zotero.org/styles -> "Multidisciplinary Digital Publishing Institute")
+% references.bib - MDPI Land article (P8) - VERSION 7
+% Conservative revision with verified bibliographic corrections only.
 % ============================================================
 
 % --- Afforestation policy and Danish context ---
@@ -40,13 +39,15 @@
   note   = {Municipal climate plan, target of 950\,ha new forest by 2030}
 }
 
-@misc{joergensen2025,
-  author = {J{\o}rgensen, P. L. and Pedersen, M. F. and Meilby, H. and Lundhede, T. and Jacobsen, J. B.},
-  title  = {Baggrundsberegninger for {\o}konomien i skovrejsning p{\aa} landbrugsjord i forbindelse med den gr{\o}nne trepart},
-  year   = {2025},
-  number = {2025/08},
-  series = {IFRO Udredning},
-  institution = {Institut for F{\o}devare- og Ressource{\o}konomi, K{\o}benhavns Universitet}
+@techreport{joergensen2025,
+  author      = {J{\o}rgensen, P. L. and Pedersen, M. F. and Meilby, H. and Lundhede, T. and Jacobsen, J. B.},
+  title       = {Baggrundsberegninger for {\o}konomien i skovrejsning p{\aa} landbrugsjord i forbindelse med den gr{\o}nne trepart},
+  year        = {2025},
+  number      = {2025/08},
+  type        = {IFRO Udredning},
+  institution = {Institut for F{\o}devare- og Ressource{\o}konomi, K{\o}benhavns Universitet},
+  pages       = {54},
+  url         = {https://researchprofiles.ku.dk/da/publications/baggrundsberegninger-for-%C3%B8konomien-i-skovrejsning-p%C3%A5-landbrugsjor/}
 }
 
 % --- MCDA and suitability modelling ---
@@ -73,12 +74,29 @@
   pages     = {247--265}
 }
 
-@misc{hvid2025,
-  author = {Hvid, N. and Lorentsen, S. A. and Steinh{\'o}lm, S.},
-  title  = {The {G}reen {T}ripartite {A}greement on Afforestation},
-  year   = {2025},
-  note   = {Unpublished student project, Aalborg University Copenhagen}
+% Peer-published erstatning for det upublicerede studenterprojekt (hvid2025):
+% multikriterie-screeningsværktøj (Synergikort) for danske kommuner under
+% Grøn Trepart. Geoforum Perspektiv nr. 47 (2025), temanummer "Den Grønne Trepart".
+@article{galloe2025,
+  author  = {Gall{\o}e, Inga Marie},
+  title   = {Synergikort: Praktisk v{\ae}rkt{\o}j til helhedsorienteret arealplanl{\ae}gning under {G}r{\o}n {T}repart},
+  journal = {Geoforum Perspektiv},
+  year    = {2025},
+  volume  = {24},
+  number  = {47},
+  pages   = {72--79},
+  doi     = {10.54337/ojs.perspektiv.v24i47.10696},
+  url     = {https://journals.aau.dk/index.php/gfp/article/view/10696},
+  note    = {Special issue: Den Gr{\o}nne Trepart. Geoforum / Aalborg University Open Publishing}
 }
+
+% Udkommenteret i v6: upubliceret studenterprojekt, erstattet af galloe2025.
+%@misc{hvid2025,
+%  author = {Hvid, N. and Lorentsen, S. A. and Steinh{\'o}lm, S.},
+%  title  = {The {G}reen {T}ripartite {A}greement on Afforestation},
+%  year   = {2025},
+%  note   = {Unpublished student project, Aalborg University Copenhagen}
+%}
 
 @article{taghizadeh2020,
   author  = {Taghizadeh-Mehrjardi, R. and Nabiollahi, K. and Rasoli, L. and Kerry, R. and Scholten, T.},
@@ -128,7 +146,8 @@
   year    = {2024},
   volume  = {86},
   number  = {4},
-  pages   = {262--277}
+  pages   = {262--277},
+  doi     = {10.2989/20702620.2024.2373749}
 }
 
 @article{chen2019,
@@ -279,6 +298,16 @@
   note   = {LBK nr.\ 124 af 26/01/2017. Retsinformation}
 }
 
+% Primær hjemmel for 15 m respektafstand til luftledninger >40 kV (A12).
+@misc{bek1112_2016,
+  author = {{Sikkerhedsstyrelsen}},
+  title  = {Bekendtg{\o}relse om sikkerhed for udf{\o}relse af ikke-elektrisk arbejde i n{\ae}rheden af elektriske anl{\ae}g},
+  year   = {2016},
+  note   = {BEK nr. 1112 af 18/08/2016, \S\,5 (respektafstande). Retsinformation},
+  url    = {https://www.retsinformation.dk/eli/lta/2016/1112}
+}
+
+% Beholdes som cf.-reference for den tekniske standardkontekst (A12).
 @misc{en50341,
   author = {{CENELEC}},
   title  = {{EN} 50341-1: Overhead Electrical Lines Exceeding {AC} 1\,{kV} -- {P}art 1: General Requirements -- Common Specifications},
@@ -292,6 +321,8 @@
   note   = {LBK nr.\ 421 af 25/04/2023. Retsinformation}
 }
 
+% >>> VERIFICÉR: angiv den version/dato I faktisk brugte; SGAV har udgivet en
+% opdatering af vejledningen i maj 2026.
 @misc{marsvejledning,
   author = {{Styrelsen for Gr{\o}n Arealoml{\ae}gning og Vandmilj{\o}}},
   title  = {Faglig vejledning {MARS} 2.4},
