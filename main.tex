@@ -30,7 +30,7 @@
 % TITEL
 % Tip: titlen skal kunne læses af en planlægger OG af en fjernanalyse-forsker.
 % >>> UDFYLD - vælg én af arbejdstitlerne herunder, eller skriv din egen
-\Title{Screeningg for Afforestation Suitability with Machine Learning and Spatially Cross-Validated Models: A Municipal-Scale GeoAI Workflow for Denmark's Green Tripartite Agreement}
+\Title{Screening for Afforestation Suitability with Machine Learning and Spatially Cross-Validated Models: A Municipal-Scale GeoAI Workflow for Denmark's Green Tripartite Agreement}
 
 % Kort titel til sidehoved (valgfri, redaktionen kan fjerne den)
 %\TitleCitation{Machine Learning Screening for Afforestation Suitability in Denmark}
@@ -67,19 +67,53 @@ $^{1}$ \quad Department of Sustainability and Planning, Aalborg University Copen
 
 %=================================================================
 \section{Introduction}
-% MÅL: ca. 1200-1600 ord. Fire bevægelser, i denne rækkefølge:
-%
-% 1) Bred kontekst: skovrejsning som multifunktionelt virkemiddel (klima, kvælstof,
-%    drikkevand, biodiversitet). Hvorfor arealkonkurrence gør prioritering nødvendig.
-% 2) Den konkrete case: Grøn Trepart, ~250.000 ha ny skov nationalt, ~950 ha i Viborg
-%    inden 2030. Forklar KORT for et internationalt publikum - de kender ikke Danmark.
-% 3) Forskningshullet: hvad findes allerede (MCDA/AHP-baseret egnethedskortlægning,
-%    ML til landskabsegnethed) og hvad mangler: (a) hård juridisk eligibility adskilt
-%    fra blød egnethed, (b) rumlig krydsvalidering i stedet for tilfældig, (c)
-%    håndtering af at man kun har positive eksempler (eksisterende skov), ikke negative.
-% 4) Bidrag + hvad artiklen viser. Skriv 3-4 nummererede bidrag. Slut med
-%    en sætning om struktur ELLER drop den (MDPI kræver den ikke).
-%
+
+% --- Movement 1: Broad context ---
+
+Afforestation is increasingly recognized as a multifunctional land-use measure that can contribute simultaneously to climate change mitigation, nitrogen retention, groundwater protection, and biodiversity enhancement \citep{gomes2023,joergensen2025}. In northern European countries with intensive agriculture, the potential co-benefits of converting cropland to forest are substantial, but achieving them requires spatially targeted planning rather than uniform expansion \citep{vanorshoven2005}.
+
+Denmark illustrates this challenge. Under the Green Tripartite Agreement (\textit{Grøn Trepart}), signed in 2024, Denmark committed to establishing approximately 250,000 hectares of new forest by 2045 as part of a broader land-use transition that also includes lowland soil conversion, wetland restoration, and agricultural extensification \citep{regeringen2024a}. Implementation is organized through 23 local green tripartite bodies (\textit{lokale grønne trepartsråd}), which coordinate afforestation targets alongside competing land-use demands at the municipal level \citep{mgtp2026}. In Viborg Municipality, the pilot area for this study, the local climate plan targets approximately 950 hectares of new forest by 2030 \citep{viborg2022}.
+
+Identifying where to establish new forest within an intensively used agricultural landscape is not straightforward. Candidate areas must satisfy legal constraints, avoid conflicts with protected habitats and groundwater interests, and ideally serve multiple environmental objectives. At the same time, practical implementation depends on landowner willingness, subsidy eligibility, and municipal planning priorities. This means that afforestation planning requires an early screening step: a systematic, data-driven way to identify which areas are worth investigating further, before site-specific assessment and stakeholder engagement begin.
+
+% --- Movement 2: What exists already ---
+
+GIS-based suitability analysis has a long history in afforestation planning. Conventional approaches typically follow a Multi-Criteria Decision Analysis (MCDA) logic, in which selected environmental and planning criteria are reclassified into standardized scores, assigned weights by expert judgement, and combined through weighted overlay to produce a composite suitability map \citep{gilliams2005,vanorshoven2005}. The main strength of this approach is transparency: planners and stakeholders can inspect which criteria are included and how they influence the result. A recent MCDA-based afforestation screening for Danish municipalities under the Green Tripartite Agreement illustrates this logic \citep{hvid2025}.
+
+However, weighted suitability models have well-documented limitations. The output depends directly on the selected criteria, reclassification thresholds, and assigned weights, which means the result formalizes a predefined judgement structure rather than learning relationships from observed spatial data \citep{hvid2025,taghizadeh2020}. In landscapes where multiple environmental gradients interact nonlinearly, fixed-class reclassification may also oversimplify continuous spatial variation \citep{taghizadeh2020}.
+
+Machine learning offers a different analytical logic. Instead of manually defining how each predictor relates to suitability, supervised models learn these relationships from labelled training data. Tree-based ensemble methods such as Random Forest \citep{breiman2001} and gradient boosting frameworks such as LightGBM \citep{ke2017lightgbm} are increasingly applied in land suitability and forest-related spatial modelling because they handle heterogeneous predictors, capture nonlinear interactions, and provide variable importance measures that support interpretation \citep{southworth2024,buthelezi2024review}. When combined with model-agnostic explainability methods such as SHAP \citep{lundberg2017shap}, the resulting models can approach the interpretability of conventional GIS overlays while offering higher reproducibility.
+
+Despite this growing body of work, most ML-based land suitability studies share two methodological shortcomings that limit their credibility for planning applications. First, they typically validate models using random train--test splits, which overestimate predictive performance when spatial autocorrelation is present \citep{meyer2022,roberts2017}. Second, they treat all non-target land as negative training examples, even though unforested land may simply be land that has not yet been converted rather than land that is inherently unsuitable. Positive-unlabelled learning offers a formal framework for relaxing this assumption \citep{elkan2008,bekker2020}, but it has rarely been applied in afforestation suitability contexts.
+
+% --- Movement 3: Research gap ---
+
+Three specific methodological gaps can be identified in the existing literature on ML-based afforestation suitability screening.
+
+First, most studies do not clearly separate legal eligibility from modelled suitability. Protected habitats, existing infrastructure, and regulatory constraints are often included as predictors or scoring layers within the same model, rather than being applied as hard exclusions before the model is trained. This conflation makes it difficult to distinguish between areas that are legally unavailable and areas that the model ranks as less suitable, which limits the usefulness of the output for planning \citep{hvid2025,taghizadeh2020}.
+
+Second, spatial validation remains uncommon. The majority of ML-based suitability studies report performance metrics derived from random cross-validation, where spatially adjacent observations may appear in both training and test sets. Because environmental predictors are spatially autocorrelated, this leads to inflated accuracy estimates that do not reflect how the model would perform in unseen geographic areas \citep{meyer2022,roberts2017}. For a screening tool intended to support municipal planning across an entire landscape, geographic generalization is more relevant than local interpolation accuracy.
+
+Third, the training label problem is rarely addressed explicitly. Where ML models are used for afforestation or forest suitability prediction, the positive class is often derived from existing forest cover, on the assumption that current forest locations reflect biophysically favorable conditions \citep{chen2019,buthelezi2024review}. However, this assumption is problematic in two ways. Existing forest may reflect historical land availability rather than optimal site conditions---in the Danish case, a large share of present-day forest consists of heath plantations established on sandy substrates in the 19th century, not on the most productive soils \citep{sorensen2024}. At the same time, all remaining non-forest land is typically treated as negative, even though some of it may be suitable but simply unconverted. Positive-unlabelled learning offers a formal framework for relaxing this assumption \citep{elkan2008,bekker2020}, but it has rarely been applied in afforestation screening contexts.
+
+These three gaps---the conflation of eligibility and suitability, the reliance on spatially naive validation, and the neglect of the label asymmetry problem---motivate the present study.
+
+% --- Movement 4: Contributions ---
+
+The present study addresses these gaps by developing and evaluating a GeoAI-based afforestation screening workflow for Viborg Municipality, Denmark. The workflow is designed as a reproducible, modular pipeline that separates rule-based eligibility from data-driven suitability prediction and validates model outputs through spatially separated cross-validation. The main contributions are:
+
+\begin{enumerate}
+    \item A transparent two-stage screening architecture that applies legal and subsidy-related constraints as hard exclusions before model training, making the distinction between eligibility and suitability explicit and auditable.
+    
+    \item A systematic evaluation of three complementary models---LightGBM, Random Forest, and positive-unlabelled LightGBM---under nine-fold spatial cross-validation, providing performance estimates that reflect geographic generalization rather than local interpolation.
+    
+    \item An empirical demonstration that treating unforested eligible land as unlabelled rather than negative changes the predicted suitability surface in interpretable ways, and that cross-model agreement can serve as a practical uncertainty indicator for planning.
+    
+    \item A discussion of the training label problem---including the historical bias introduced by using existing forest dominated by 19th-century heath plantations---and its consequences for interpreting ML-based suitability outputs in a planning context.
+\end{enumerate}
+
+The study uses Viborg Municipality as a pilot area but the workflow is designed to be transferable to other Danish municipalities. The output is intended as decision support for early-stage screening, not as a substitute for site-specific assessment, stakeholder engagement, or municipal planning judgement.
+
 % CITATIONER: [1] eller [1,3] eller [1--3], FØR punktum. Mål: 40-60 referencer.
 
 \section{Materials and Methods}
@@ -87,6 +121,13 @@ $^{1}$ \quad Department of Sustainability and Planning, Aalborg University Copen
 % dømmer den hårdest. Skriv så en anden kan gentage arbejdet.
 
 \subsection{Study Area}
+The workflow was developed and evaluated in Viborg Municipality, located in central Jutland, Denmark (Figure 1). Covering approximately 1,408 km², Viborg is among the largest Danish municipalities by area and contains substantial internal landscape variation: sandy outwash plains dominate the western part, while clay-rich moraine landscapes characterize the east. This east–west gradient produces corresponding variation in soils, hydrology, land use, and existing forest patterns, making the municipality a demanding test case for a spatial prediction workflow \citep{sorensen2024}.
+
+Afforestation is an explicit municipal planning objective. The municipal climate plan reports a forest cover of approximately 19% in 2018 and targets 950 ha of new forest by 2030, with an additional 2,350 ha planned between 2030 and 2050 \citep{viborg2022}. These local targets sit within the national Green Tripartite commitment of 250,000 ha of new forest by 2045 \citep{regeringen2024a}.
+
+The municipal plan also contains designated zones where afforestation is desired (\textit{skov$_{+}$}) or undesired (\textit{skov$_{-}$}), available through the national planning register. However, correspondence with the municipal planning team confirmed that the desired-afforestation zones are largely inherited from regional plans prepared before the 2007 Danish structural reform, and documentation of the original designation criteria no longer exists. These zones are therefore used only as reference layers in this study, not as ground truth (see Section 2.5).
+
+Viborg is used as an operational pilot rather than a unique case: the workflow relies exclusively on nationally available datasets and is designed to be transferable to any Danish municipality
 % Viborg Kommune: areal, arealanvendelse, jordtyper, nuværende skovdække,
 % hvorfor netop denne kommune (skovrejsningsmål, datatilgængelighed).
 % Figur 1: oversigtskort (Danmark-indsæt + kommunen).
@@ -95,13 +136,62 @@ $^{1}$ \quad Department of Sustainability and Planning, Aalborg University Copen
 % Tabel 1: ÉN tabel med alle inputlag. Kolonner:
 % Layer | Source | Native resolution/scale | Year | Use (eligibility / predictor / label)
 % Det er den tabel reviewere kigger på først. Brug den til at spare plads i teksten.
+The workflow uses authoritative Danish vector and raster datasets, all spatially filtered to the municipal boundary before ingestion. Data were retrieved from Datafordeleren, MiljøGIS (Miljøstyrelsen), Plandata.dk, GeoDanmark, GEUS, SCALGO Live, and the MARS portal \citep{marsvejledning}. Table~\ref{tab:input-data} summarises all input layers and their roles.
 
+All layers were harmonised to a common 10,m grid in EPSG:25832 (ETRS89/UTM Zone 32N). Continuous rasters (elevation, slope) were resampled bilinearly; categorical rasters (soil type, biodiversity class) by nearest neighbour. The 2,m SCALGO land cover raster was aggregated to 10,m through fractional aggregation, producing eight continuous percentage bands that preserve sub-pixel heterogeneity. Distance predictors were computed as Euclidean distance transforms from rasterised source layers (roads, power lines, streams, earthen dykes). Vector inputs in WGS84 were reprojected to EPSG:25832 immediately after loading.
+\begin{table}[H]
+\centering
+\caption{Input datasets. Each layer is used for eligibility masking (E),
+as a predictor (P), or as a training label (L).}
+\label{tab:input-data}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabular}{@{} p{3.8cm} p{2.6cm} p{4.2cm} c @{}}
+\toprule
+\textbf{Dataset} & \textbf{Source} & \textbf{Description} & \textbf{Role} \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Raster sources}}\\[2pt]
+SCALGO land cover (2\,m)     & SCALGO Live     & 8-class categorical; fractional aggregation to 10\,m & P \\
+Terrain model (2\,m DTM)     & SCALGO / GeoDanmark & Elevation, slope, aspect, TWI & P \\
+Jordartskort 2024            & GEUS            & Soil type 0--30\,cm (JB classes) & P \\[4pt]
+\multicolumn{4}{@{}l}{\textit{Training label}}\\[2pt]
+Digitalt Skovkort 2022      & Milj\o styrelsen & Existing forest polygons & L \\[4pt]
+\multicolumn{4}{@{}l}{\textit{Legal and planning constraints}}\\[2pt]
+\S\,3 protected nature       & Milj\o GIS      & Filter: Statuskode = 3 & E \\
+Protection lines (\S\,16--18)& Milj\o GIS      & Lakes, forest edges, ancient monuments & E \\
+Fredskov                     & Milj\o GIS      & Existing protected forest & E \\
+Fredninger + proposals       & Milj\o GIS      & Conservation orders (BEK 1079 \S\,9) & E \\
+Natura 2000 habitat          & Milj\o GIS      & Habitats Directive art.\,6 & E \\
+BNBO                         & Milj\o GIS      & Drinking water protection zones & E \\
+Kulstof2022 (lowland)        & MARS portal     & Carbon-rich soils $\geq 6\,\%$ C & E \\
+\texttt{skov\_neg}           & Plandata.dk     & Afforestation-undesired zones & E \\
+R\aa stofomr\aa der          & Milj\o GIS      & Extraction areas + interest zones & E \\[4pt]
+\multicolumn{4}{@{}l}{\textit{Infrastructure}}\\[2pt]
+Vejmidte                     & GeoDanmark      & Road centrelines; differentiated buffer & E, P \\
+H\o jsp\ae ndingsledninger   & GeoDanmark      & Power lines; 15\,m buffer & E, P \\
+Beskyttede vandl\o b         & Milj\o GIS      & Protected streams; 2\,m buffer & E, P \\
+Diger                        & Milj\o GIS      & Protected earthen dykes & P \\[4pt]
+\multicolumn{4}{@{}l}{\textit{Planning and contextual layers}}\\[2pt]
+OSD / NFI / SFI              & Milj\o GIS      & Groundwater interest areas & P \\
+Kv\ae lstofretention         & MARS portal     & N-retention potential (continuous) & P \\
+Biodiversitet                & Arealinformation & 12-class priority layer & P \\
+\bottomrule
+\end{tabular}
+\end{table}
 \subsection{Eligibility Masking}
 % Forklar princippet: eligibility (må man overhovedet?) er IKKE det samme som
 % suitability (er det et godt sted?). Hårde juridiske og tilskudsmæssige udelukkelser
 % (A1-A13 samt B-kriterier) anvendes FØR modellen.
 % Tabel 2: constraint-tabel med lovhjemmel og bufferafstand.
 % Nævn resultatet her kort (60.345 ha, 42,1 %) eller gem det til Results - vælg ét sted.
+The eligibility mask separates the question \textit{may afforestation legally occur here?} from the question \textit{is the site suitable?} This distinction is central to the workflow: legally or physically unavailable land is removed before the model is trained, so that predicted variation reflects differences among realistic candidates rather than the contrast between buildable land and a motorway.
+
+The mask combines twelve legal exclusions (A1--A12) derived from Danish nature protection, forestry, road, cultural heritage, and infrastructure legislation, one differentiated road-buffer constraint (A13), and one subsidy-based exclusion (B1) under BEK,1079 \S,9 \citep{bek1079_2025}. Table~\ref{tab:constraints} lists all constraints with their legal basis, buffer rule, and data source. Each constraint is treated as a sufficient condition for exclusion, and the final mask is the logical union of all individual layers.
+
+In addition, existing forest (Digitalt Skovkort 2022) is removed from the prediction domain because it serves as the positive training label. The model therefore predicts suitability only for eligible non-forest land.
+
+After applying all constraints, the remaining eligible area covers 60,345,ha, corresponding to 42.1,% of the total municipal area.
 
 \subsection{Predictor Variables}
 % De 17 variable, grupperet: terræn, hydrologi/vådhed (TWI), jordbund,
