@@ -409,28 +409,140 @@ Candidate areas were extracted from each suitability surface through a three-ste
 \end{enumerate}
 
 The resulting polygons were ranked by mean suitability score, and the top-ranked subset whose cumulative area first reaches the Viborg Green Tripartite target of approximately 950\,ha was identified as the priority candidate pool. A triple-consensus zone---where all three models agree on top-decile status---was computed to provide a conservative, cross-model agreement layer for planning communication.
+% =============================================================
+% Section 3 - Results
+% =============================================================
 \section{Results}
-% MÅL: ca. 1200-1800 ord. KUN resultater - ingen fortolkning her.
-% Foreslået figur/tabel-budget (MDPI har ingen grænse, men 6-8 figurer + 3-4
-% tabeller er det læsere kan rumme):
-%
-% Fig. 1  Studieområde
-% Fig. 2  Workflow-diagram (eligibility -> predictors -> model -> hotspots)
-% Fig. 3  Eligibility-maske
-% Fig. 4  Sandsynlighedskort (LightGBM)
-% Fig. 5  SHAP - variabelbetydning
-% Fig. 6  Hotspots + triple-consensus-zone
-% Fig. 7  Bivariat kort: egnethed x dyrkningsværdi
-% Tab. 3  Modelperformance (AUC ± SD på tværs af folds, alle 3 modeller)
-% Tab. 4  Modelenighed (Pearson, Spearman, Jaccard)
-%
-% Alle figurer: min. 600 dpi, PNG/TIFF/JPEG, engelsk tekst, punktum som decimaltegn.
+\label{sec:results}
 
+% =============================================================
+% 3.1 Eligible Area
+% =============================================================
 \subsection{Eligible Area}
-\subsection{Model Performance under Spatial Cross-Validation}
-\subsection{Variable Importance}
-\subsection{Hotspots and Cross-Model Agreement}
+\label{sec:results-eligible}
 
+After applying all 14 constraints (A1--A13 and B1), the remaining eligible area covers 60{,}345\,ha, corresponding to 42.1\,\% of the total municipal area of 143{,}300\,ha. The largest exclusions are existing forest (Fredskov), \S\,3 protected nature, carbon-rich lowland soils ($\geq$\,6\,\% C), and the \texttt{skov\_neg} planning designation. Figure~\ref{fig:eligibility} shows the spatial distribution of eligible and excluded land.
+
+% >>> FIGUR: Eligibility mask kort.
+% Indsæt dit kort her. Engelske labels, 600+ dpi.
+%\begin{figure}[H]
+%    \centering
+%    \includegraphics[width=0.9\textwidth]{figures/eligibility_mask.png}
+%    \caption{Eligibility mask for Viborg Municipality. Eligible land (green) covers 60{,}345\,ha (42.1\,\%); excluded areas are determined by 13 legal constraints and one subsidy-based constraint.}
+%    \label{fig:eligibility}
+%\end{figure}
+
+% =============================================================
+% 3.2 Model Performance
+% =============================================================
+\subsection{Model Performance under Spatial Cross-Validation}
+\label{sec:results-performance}
+
+Table~\ref{tab:cv-performance} summarises the cross-validation performance for all three models. All models achieve mean AUC values in the range 0.727--0.729 under nine-fold spatial cross-validation, indicating moderate but consistent discriminative ability across held-out geographic regions.
+
+\begin{table}[H]
+\centering
+\caption{Spatial cross-validation performance (17 features, 9 folds, $n = 39{,}904$).}
+\label{tab:cv-performance}
+\footnotesize
+\begin{tabular}{@{} l l r r r r @{}}
+\toprule
+\textbf{Model} & \textbf{Type} & \textbf{AUC mean} & \textbf{AUC std} & \textbf{AP mean} & \textbf{AP std} \\
+\midrule
+LightGBM v3      & Supervised      & 0.729 & 0.059 & 0.727 & 0.097 \\
+Random Forest v3 & Supervised      & 0.727 & 0.052 & 0.727 & 0.093 \\
+PU-LightGBM v3   & Semi-supervised & 0.729$^{a}$ & 0.059 & 0.672 & 0.107 \\
+\bottomrule
+\multicolumn{6}{@{}p{13cm}@{}}{\footnotesize $^{a}$\,AUC on the PU labelling task (s-task). The Elkan--Noto correction factor was $c = 0.556$ (CV mean) / $0.776$ (full-data). Calibrated AUC(y) $= 0.716 \pm 0.056$.}\\
+\end{tabular}
+\end{table}
+
+Per-fold AUC values range from 0.626 (Fold~5) to 0.829 (Fold~7) across all three models (Table~\ref{tab:cv-folds}). Folds~5 and~6, which correspond to peripheral zones with sparser training coverage, consistently produce the weakest performance. Fold~7, covering the central agricultural plain, produces the strongest results. This geographic variation is itself an important finding: a conventional random validation would conceal it, because spatially adjacent pixels could appear in both training and test sets.
+
+\begin{table}[H]
+\centering
+\caption{Per-fold AUC-ROC across the nine spatially blocked folds.}
+\label{tab:cv-folds}
+\footnotesize
+\begin{tabular}{@{} c r r r @{}}
+\toprule
+\textbf{Fold} & \textbf{LightGBM} & \textbf{Random Forest} & \textbf{PU-LightGBM} \\
+\midrule
+1 & 0.709 & 0.700 & 0.695 \\
+2 & 0.775 & 0.764 & 0.761 \\
+3 & 0.713 & 0.714 & 0.698 \\
+4 & 0.778 & 0.775 & 0.761 \\
+5 & 0.636 & 0.648 & 0.626 \\
+6 & 0.643 & 0.655 & 0.642 \\
+7 & 0.829 & 0.814 & 0.814 \\
+8 & 0.732 & 0.726 & 0.714 \\
+9 & 0.743 & 0.748 & 0.729 \\
+\midrule
+\textbf{Mean} & \textbf{0.729} & \textbf{0.727} & \textbf{0.729} \\
+\textbf{Std}  & 0.059 & 0.052 & 0.059 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The three model curves track each other closely across all nine folds, indicating that the performance variation is driven by geographic heterogeneity rather than by algorithm-specific behaviour.
+
+% =============================================================
+% 3.3 Variable Importance
+% =============================================================
+\subsection{Variable Importance}
+\label{sec:results-shap}
+
+Figure~\ref{fig:shap} shows the SHAP-based feature importance for the PU-LightGBM model. Nitrogen retention and soil type are the two most influential predictors according to mean absolute SHAP values, followed by slope, distance to power lines, TWI, and distance to streams. The gain-based ranking identifies nitrogen retention as the single most important feature for constructing tree splits (23.9\,\% of total gain), followed by distance to power lines (13.8\,\%), terrain elevation (11.1\,\%), and slope (10.0\,\%).
+
+% >>> FIGUR: SHAP beeswarm + gain bar chart.
+%\begin{figure}[H]
+%    \centering
+%    \includegraphics[width=\textwidth]{figures/shap_combined.png}
+%    \caption{SHAP interpretation for PU-LightGBM v3 (3{,}000 sampled observations). Left: beeswarm plot showing direction and spread of feature effects. Right: mean absolute SHAP values.}
+%    \label{fig:shap}
+%\end{figure}
+
+The addition of TWI to the feature set reduced the gain-based importance of slope from 18\,\% in the 16-feature baseline to 10\,\% in the final 17-feature model, consistent with the interpretation that slope had partially served as a proxy for topographic moisture gradients in the absence of a dedicated wetness predictor.
+
+The difference between the SHAP and gain-based rankings is not a contradiction: gain importance describes how the model constructs its tree structure, while SHAP describes how each feature affects individual predictions. Both measures confirm that the model is primarily driven by soil conditions, nitrogen retention, terrain, wetness, and distance-based spatial context.
+
+% =============================================================
+% 3.4 Hotspots and Cross-Model Agreement
+% =============================================================
+\subsection{Hotspots and Cross-Model Agreement}
+\label{sec:results-hotspots}
+
+Table~\ref{tab:hotspot-results} summarises the candidate area extraction for all three models. Each model identifies between 596 and 650 top-decile polygons covering 2{,}305--2{,}416\,ha. The top-ranked subset reaching the 950\,ha Green Tripartite target requires 222--255 patches across models, all converging at 952--958\,ha.
+
+\begin{table}[H]
+\centering
+\caption{Candidate area statistics per model. Top-10\,\% refers to polygons above the 90th-percentile threshold; Trepart target refers to the subset reaching $\sim$950\,ha.}
+\label{tab:hotspot-results}
+\footnotesize
+\begin{tabular}{@{} l r r r r r @{}}
+\toprule
+\textbf{Model} & \textbf{p90} & \textbf{Top-10\,\% ($n$)} & \textbf{Top-10\,\% (ha)} & \textbf{Trepart ($n$)} & \textbf{Trepart (ha)} \\
+\midrule
+LightGBM v3      & 0.607 & 650 & 2{,}416 & 222 & 958 \\
+Random Forest v3 & 0.614 & 596 & 2{,}326 & 255 & 954 \\
+PU-LightGBM v3   & 0.765 & 649 & 2{,}305 & 253 & 952 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The higher p90 threshold for PU-LightGBM (0.765 vs.\ 0.607--0.614) reflects its more permissive score distribution: 5.8\,\% of eligible pixels exceed a corrected score of 0.9, compared to 0.6\,\% (LightGBM) and 0.2\,\% (Random Forest).
+
+Cross-model agreement between LightGBM and Random Forest is strong at the pixel level (Pearson $r = 0.898$, Spearman $\rho = 0.884$) but more moderate at the top-decile threshold (Jaccard $= 0.598$), indicating that the continuous suitability surfaces are highly correlated while exact candidate area boundaries remain sensitive to the classification threshold. The triple-consensus zone---where all three models agree on top-decile status---covers 4{,}529\,ha (6.8\,\% of eligible area).
+
+An external validation using forest density within a 500\,m moving window (withheld from model training) showed that the mean forest density within the consensus zone is 27.7\,\%, more than twice the eligible-area mean of 13.0\,\%. Eighty-two percent of consensus pixels lie in cells with local forest density exceeding 10\,\%. This convergence between the model output and an independent connectivity indicator provides external support for the interpretation that the learned suitability signal reflects genuine landscape patterns rather than training label artefacts.
+
+% >>> FIGUR: Three-way model comparison + consensus map.
+%\begin{figure}[H]
+%    \centering
+%    \includegraphics[width=\textwidth]{figures/three_way_comparison.png}
+%    \caption{Three-way model comparison. Upper panels: LightGBM and Random Forest suitability surfaces. Lower-left: PU-LightGBM. Lower-right: cross-model agreement. Dark red pixels are in the top 10\,\% for all three models (consensus zone: 4{,}529\,ha).}
+%    \label{fig:three-way}
+%\end{figure}
 %=================================================================
 \section{Discussion}
 % MÅL: ca. 1200-1600 ord. Her hører fortolkningen hjemme.
