@@ -115,15 +115,21 @@ The present study addresses these gaps by developing and evaluating a GeoAI-base
 The study uses Viborg Municipality as a pilot area but the workflow is designed to be transferable to other Danish municipalities. The output is intended as decision support for early-stage screening, not as a substitute for site-specific assessment, stakeholder engagement, or municipal planning judgement.
 
 % CITATIONER: [1] eller [1,3] eller [1--3], FØR punktum. Mål: 40-60 referencer.
+% =============================================================
+% v1 FACTUAL CORRECTIONS — rettet mod endeligt P8-PDF + figurer
+% TODO-VERIFY markerer steder hvor Ali skal tjekke pipeline-output
+% (Cell 07 eligibility + Cell 08/09 feature array + Cell 11 consensus)
+% =============================================================
+
 \section{Materials and Methods}
 
 % =============================================================
-% Section 2.1 - Study Area
+% 2.1 Study Area  (uændret)
 % =============================================================
 \subsection{Study Area}
 \label{sec:study-area}
 
-The workflow was developed and evaluated in Viborg Municipality, located in central Jutland, Denmark (Figure~1). Covering approximately 1{,}408\,km\textsuperscript{2}, Viborg is among the largest Danish municipalities by area and contains substantial internal landscape variation: sandy outwash plains dominate the western part, while clay-rich moraine landscapes characterize the east. This east--west gradient produces corresponding variation in soils, hydrology, land use, and existing forest patterns, making the municipality a demanding test case for a spatial prediction workflow \citep{sorensen2024}.
+The workflow was developed and evaluated in Viborg Municipality, located in central Jutland, Denmark (Figure~\ref{fig:study-area}). Covering approximately 1{,}408\,km\textsuperscript{2}, Viborg is among the largest Danish municipalities by area and contains substantial internal landscape variation: sandy outwash plains dominate the western part, while clay-rich moraine landscapes characterize the east. This east--west gradient produces corresponding variation in soils, hydrology, land use, and existing forest patterns, making the municipality a demanding test case for a spatial prediction workflow \citep{sorensen2024}.
 
 Afforestation is an explicit municipal planning objective. The municipal climate plan reports a forest cover of approximately 19\,\% in 2018 and targets 950\,ha of new forest by 2030, with an additional 2{,}350\,ha planned between 2030 and 2050 \citep{viborg2022}. These local targets sit within the national Green Tripartite commitment of 250{,}000\,ha of new forest by 2045 \citep{regeringen2024a}.
 
@@ -131,20 +137,26 @@ The municipal plan also contains designated zones where afforestation is desired
 
 Viborg is used as an operational pilot rather than a unique case: the workflow relies exclusively on nationally available datasets and is designed to be transferable to any Danish municipality.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/Summary A4 Portrait.png}
+    \caption{Study area: Viborg Municipality in central Jutland, Denmark. Inset: location within Denmark.}
+    \label{fig:study-area}
+\end{figure}
+
 % =============================================================
-% Section 2.2 - Data
+% 2.2 Data  (RETTET: roller i tabellen)
 % =============================================================
 \subsection{Data}
 \label{sec:data}
 
-The workflow uses authoritative Danish vector and raster datasets, all spatially filtered to the municipal boundary before ingestion. Data were retrieved from Datafordeleren, Milj{\o}GIS (Milj{\o}styrelsen), Plandata.dk, GeoDanmark, GEUS, SCALGO Live, and the MARS portal \citep{marsvejledning}. Table~\ref{tab:input-data} summarises all input layers and their roles.
+The workflow uses authoritative Danish vector and raster datasets, all spatially filtered to the municipal boundary before ingestion. Data were retrieved from Datafordeleren, Milj{\o}GIS (Milj{\o}styrelsen), Plandata.dk, GeoDanmark, GEUS, SCALGO Live, and the MARS portal \citep{marsvejledning}. Table~\ref{tab:input-data} summarises all input layers and their roles: eligibility masking (E), predictor (P), training label (L), or contextual/planning reference (C).
 
 All layers were harmonised to a common 10\,m grid in EPSG:25832 (ETRS89/UTM Zone~32N). Continuous rasters (elevation, slope) were resampled bilinearly; categorical rasters (soil type, biodiversity class) by nearest neighbour. The 2\,m SCALGO land cover raster was aggregated to 10\,m through fractional aggregation, producing eight continuous percentage bands that preserve sub-pixel heterogeneity. Distance predictors were computed as Euclidean distance transforms from rasterised source layers (roads, power lines, streams, earthen dykes). Vector inputs originally in WGS84 were reprojected to EPSG:25832 immediately after loading.
 
 \begin{table}[H]
 \centering
-\caption{Input datasets. Each layer is used for eligibility masking (E),
-as a predictor (P), or as a training label (L).}
+\caption{Input datasets. Roles: eligibility masking (E), predictor (P), training label (L), contextual/planning reference (C).}
 \label{tab:input-data}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -154,19 +166,21 @@ as a predictor (P), or as a training label (L).}
 \textbf{Dataset} & \textbf{Source} & \textbf{Description} & \textbf{Role} \\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Raster sources}}\\[2pt]
-SCALGO land cover (2\,m)     & SCALGO Live     & 8-class categorical; fractional aggregation to 10\,m & P \\
+SCALGO land cover (2\,m)     & SCALGO Live     & 8-class categorical; fractional aggregation to 10\,m (5 bands retained after leakage screening) & P \\
 Terrain model (2\,m DTM)     & SCALGO / GeoDanmark & Elevation, slope, aspect, TWI & P \\
 Jordartskort 2024            & GEUS            & Soil type 0--30\,cm (JB classes) & P \\[4pt]
 \multicolumn{4}{@{}l}{\textit{Training label}}\\[2pt]
 Digitalt Skovkort 2022      & Milj{\o}styrelsen & Existing forest polygons & L \\[4pt]
 \multicolumn{4}{@{}l}{\textit{Legal and planning constraints}}\\[2pt]
 \S\,3 protected nature       & Milj{\o}GIS      & Filter: Statuskode = 3 & E \\
-Protection lines (\S\,16--18)& Milj{\o}GIS      & Lakes, forest edges, ancient monuments & E \\
+\S\,17 forest protection lines & Milj{\o}GIS    & Protection lines around existing forest & E \\
+\S\,18 ancient monuments     & Milj{\o}GIS      & 100\,m protection zones & E \\
+\S\,16 / \S\,19 protection zones & Milj{\o}GIS  & Lake/stream lines, church surroundings & C (soft flag) \\
 Fredskov                     & Milj{\o}GIS      & Existing protected forest & E \\
 Fredninger + proposals       & Milj{\o}GIS      & Conservation orders (BEK 1079 \S\,9) & E \\
 Natura 2000 habitat          & Milj{\o}GIS      & Habitats Directive art.\,6 & E \\
 BNBO                         & Milj{\o}GIS      & Drinking water protection zones & E \\
-Kulstof2022 (lowland)        & MARS portal     & Carbon-rich soils $\geq 6\,\%$ C & E \\
+Kulstof2022 (lowland)        & MARS portal     & Carbon-rich soils; $\geq 6\,\%$ C excluded (B1), continuous share used as predictor & E, P \\
 \texttt{skov\_neg}           & Plandata.dk     & Afforestation-undesired zones & E \\
 R{\aa}stofomr{\aa}der        & Milj{\o}GIS      & Extraction areas + interest zones & E \\[4pt]
 \multicolumn{4}{@{}l}{\textit{Infrastructure}}\\[2pt]
@@ -175,31 +189,35 @@ H{\o}jsp{\ae}ndingsledninger & GeoDanmark      & Power lines; 15\,m buffer & E, 
 Beskyttede vandl{\o}b        & Milj{\o}GIS      & Protected streams; 2\,m buffer & E, P \\
 Diger                        & Milj{\o}GIS      & Protected earthen dykes & P \\[4pt]
 \multicolumn{4}{@{}l}{\textit{Planning and contextual layers}}\\[2pt]
-OSD / NFI / SFI              & Milj{\o}GIS      & Groundwater interest areas & P \\
+OSD / NFI / SFI              & Milj{\o}GIS      & Groundwater interest areas & C \\
 Kv{\ae}lstofretention        & MARS portal     & N-retention potential (continuous) & P \\
 Biodiversitet                & Arealinformation & 12-class priority layer & P \\
+Forest density (500\,m)      & Derived          & Withheld from training; used only as independent context check & C \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 % =============================================================
-% Section 2.3 - Eligibility Masking
+% 2.3 Eligibility Masking  (RETTET: §16 fjernet fra hard-tabel, renummereret)
 % =============================================================
 \subsection{Eligibility Masking}
 \label{sec:eligibility}
 
-The eligibility mask separates the question \textit{may afforestation legally occur here?} from the question \textit{is the site suitable?} This distinction is central to the workflow: legally or physically unavailable land is removed before the model is trained, so that predicted variation reflects differences among realistic candidates rather than the contrast between buildable land and a motorway.
+The eligibility mask separates the question \textit{may afforestation legally occur here?} from the question \textit{is the site suitable?} This distinction is central to the workflow: legally or physically unavailable land is removed before the model is trained, so that predicted variation reflects differences among realistic candidates rather than the contrast between farmland and a motorway.
 
-The mask combines twelve legal exclusions (A1--A12) derived from Danish nature protection, forestry, road, cultural heritage, and infrastructure legislation, one differentiated road-buffer constraint (A13), and one subsidy-based exclusion (B1) under BEK\,1079 \S\,9 \citep{bek1079_2025}. Table~\ref{tab:constraints} lists all constraints with their legal basis, buffer rule, and data source. Each constraint is treated as a sufficient condition for exclusion, and the final mask is the logical union of all individual layers.
+% TODO-VERIFY: Tjek Cell 07 at §16 IKKE indgår som hård eksklusion i den
+% endelige 60,345 ha-maske. Specialet er selvmodsigende her; formuleringen
+% nedenfor følger specialets tekst (soft flags på 0.9% af eligible areal).
+The mask combines twelve hard exclusions (A1--A12) derived from Danish nature protection, forestry, water, cultural heritage, planning, resource extraction, road, and infrastructure legislation with one subsidy-based exclusion (B1) under BEK\,1079 \S\,9 \citep{bek1079_2025}. Table~\ref{tab:constraints} lists all constraints with their legal basis, buffer rule, and data source. Each constraint is treated as a sufficient condition for exclusion, and the final mask is the logical union of all individual layers.
 
-Two additional layers---\S\,16 lake and stream protection lines and \S\,19 church surroundings---were retained as soft planning flags rather than hard exclusions, because they are dispensable through case-specific assessment (Table~\ref{tab:soft-constraints}).
+Two additional regulatory layers---\S\,16 lake and stream protection lines and \S\,19 church surroundings---were retained as soft planning flags rather than hard exclusions, because both are formally dispensable through case-specific municipal assessment (Table~\ref{tab:soft-constraints}). The mask is therefore delivered as a three-level classification (ineligible / soft-flagged / eligible); soft flags affect approximately 0.9\,\% of the eligible area.
 
 In addition, existing forest (Digitalt Skovkort 2022) is removed from the prediction domain because it serves as the positive training label. The model therefore predicts suitability only for eligible non-forest land. After applying all constraints, the remaining eligible area covers 60{,}345\,ha, corresponding to 42.1\,\% of the total municipal area.
 
 \begin{table}[H]
 \centering
-\caption{Hard constraints applied in the eligibility mask. A1--A13 are
-legal exclusions; B1 is a subsidy-based exclusion under BEK\,1079.}
+\caption{Hard constraints applied in the eligibility mask. A1--A12 are
+legal and infrastructure-related exclusions; B1 is a subsidy-based exclusion under BEK\,1079.}
 \label{tab:constraints}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -212,51 +230,47 @@ A1  & \S\,3 protected nature
     & Naturbeskyttelsesloven \S\,3 \citep{nbl_lbk2024}
     & Polygon (Statuskode = 3)
     & Milj{\o}GIS \\
-A2  & \S\,16 lake / stream protection lines
-    & Naturbeskyttelsesloven \S\,16 \citep{nbl_lbk2024}
-    & Polygon
-    & Milj{\o}GIS \\
-A3  & \S\,17 forest protection lines
+A2  & \S\,17 forest protection lines
     & Naturbeskyttelsesloven \S\,17 \citep{nbl_lbk2024}
     & Polygon
     & Milj{\o}GIS \\
-A4  & \S\,18 ancient-monument protection
+A3  & \S\,18 ancient-monument protection
     & Naturbeskyttelsesloven \S\,18 \citep{nbl_lbk2024}
     & Polygon (100\,m)
     & Milj{\o}GIS \\
-A5  & Fredskov
+A4  & Fredskov
     & Skovloven \S\,4 \citep{skovloven2024}
     & Polygon
     & Milj{\o}GIS \\
-A6  & Fredninger + fredningsforslag
+A5  & Fredninger + fredningsforslag
     & NBL \S\,37 \citep{nbl_lbk2024}; BEK 1079 \S\,9 \citep{bek1079_2025}
     & Polygon (Fred\_tkode 1+2)
     & Milj{\o}GIS \\
-A7  & Natura 2000 habitat
+A6  & Natura 2000 habitat
     & Habitatdirektivet art.\,6 \citep{habitatdir1992}
     & Polygon
     & Milj{\o}GIS \\
-A8  & Beskyttede vandl{\o}b
+A7  & Beskyttede vandl{\o}b
     & Vandl{\o}bsloven \S\,69 \citep{vandloebsloven2024}
     & 2\,m buffer
     & Milj{\o}GIS \\
-A9  & \texttt{skov\_neg} (skovrejsning u{\o}nsket)
+A8  & \texttt{skov\_neg} (skovrejsning u{\o}nsket)
     & Jordressourcebek.\ \S\,9 \citep{jordressourcebek}; Viborg Kommuneplan \citep{viborgkommuneplan2025}
     & Polygon
     & Plandata.dk \\
-A10 & BNBO drinking water
+A9  & BNBO drinking water
     & Milj{\o}beskyttelsesloven
     & Polygon
     & Milj{\o}GIS \\
-A11 & R{\aa}stofgraveomr{\aa}der + interesse
+A10 & R{\aa}stofgraveomr{\aa}der + interesse
     & R{\aa}stofloven \S\,5a \citep{raastofloven2024}
     & Polygon (kode 1+2)
     & Milj{\o}GIS \\
-A12 & H{\o}jsp{\ae}ndingsledninger
+A11 & H{\o}jsp{\ae}ndingsledninger
     & EN 50341-1 \citep{en50341}
     & 15\,m buffer
     & GeoDanmark \\
-A13 & Vejmidte (differentieret)
+A12 & Vejmidte (differentieret)
     & Vejloven \S\S\,40--41 \citep{vejloven2024}
     & 10 / 7 / 3\,m (kat.\ a/b/c)
     & GeoDanmark \\
@@ -279,34 +293,36 @@ B1  & Kulstofrige lavbund
 \toprule
 \textbf{ID} & \textbf{Constraint} & \textbf{Reason for soft treatment} & \textbf{Use in workflow} \\
 \midrule
-S1 & \S\,16 lake/stream protection lines & Dispensable through case-specific assessment & Soft-flag \\
-S2 & \S\,19 church surroundings & Dispensable through case-specific assessment & Soft-flag \\
+S1 & \S\,16 lake/stream protection lines & Dispensable through case-specific assessment & Soft flag \\
+S2 & \S\,19 church surroundings & Dispensable through case-specific assessment & Soft flag \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 % =============================================================
-% Section 2.4 - Predictor Variables
+% 2.4 Predictor Variables  (RETTET: korrekt 17-liste, 4+4+5+4)
 % =============================================================
 \subsection{Predictor Variables}
 \label{sec:predictors}
 
+% TODO-VERIFY: Tjek feature-array i final v3 notebook (Cell 08/09) at
+% grupperne nedenfor matcher præcis.
 The final feature set comprises 17 predictors at 10\,m resolution, organised in four groups:
 
 \begin{enumerate}
-    \item \textit{Terrain derivatives}: elevation, slope, aspect, and the Topographic Wetness Index (TWI), all derived from the 2\,m DTM. TWI was computed using D-infinity flow accumulation with a 0.1\textdegree{} minimum slope floor and captures moisture-gradient information that is biophysically independent of the training label.
+    \item \textit{Terrain derivatives} (4): elevation, slope, aspect, and the Topographic Wetness Index (TWI), all derived from the 2\,m DTM. TWI was computed using D-infinity flow accumulation with a 0.1\textdegree{} minimum slope floor and captures moisture-gradient information that is biophysically independent of the training label.
 
-    \item \textit{Soil and environmental variables}: soil type (JB classes, categorical), nitrogen retention potential (continuous), and biodiversity priority (12-class categorical).
+    \item \textit{Soil and environmental variables} (4): soil type (JB classes, categorical), nitrogen retention potential (continuous), carbon-rich lowland share (continuous), and biodiversity priority (12-class categorical).
 
-    \item \textit{Land cover fractions}: eight continuous percentage bands produced by fractional aggregation of the 2\,m SCALGO land cover raster to 10\,m, preserving sub-pixel heterogeneity.
+    \item \textit{Land cover fractions} (5): the five SCALGO percentage bands retained after leakage screening (Section~\ref{sec:leakage}); three of the original eight bands were removed because their values were structurally tied to the training label.
 
-    \item \textit{Distance rasters}: Euclidean distance to roads, power lines, protected streams, and earthen dykes, computed from rasterised source layers.
+    \item \textit{Distance rasters} (4): Euclidean distance to roads, power lines, protected streams, and earthen dykes.
 \end{enumerate}
 
 The choice to supply distance and fractional-aggregation features rather than raw rasters reflects a deliberate design trade-off. Gradient-boosted decision trees operate on tabular scalar features and cannot learn spatial context from image patches the way a convolutional model would. The engineered features encode an explicit hypothesis about which spatial relationships matter, which is more interpretable---and therefore more auditable in a planning context---than a learned representation.
 
 % =============================================================
-% Section 2.5 - Training Data and the Label Problem
+% 2.5 Training Data and the Label Problem  (uændret)
 % =============================================================
 \subsection{Training Data and the Label Problem}
 \label{sec:labels}
@@ -325,116 +341,52 @@ The use of existing forest introduces its own bias. A substantial share of prese
 Negative labels are constructed by random sampling from the eligible non-forest area defined by the eligibility mask (Section~\ref{sec:eligibility}). The contrast the model learns is therefore between locations where forest currently exists and locations that are eligible but currently unforested---the substantively relevant signal for afforestation screening. However, this assumes that all eligible non-forest land is unsuitable, which is unlikely: some unforested areas may simply not have been converted for economic, ownership, or policy reasons. This assumption motivates the inclusion of a PU-learning variant.
 
 \paragraph{Sampling design.}
-An inward buffer of 20--50\,m was applied to forest polygon boundaries before positive samples were drawn, to reduce mixed-pixel effects and geometric edge artefacts. The same principle was applied to the non-forest pool. The final training set comprises 39{,}904 samples.
+An inward buffer of 20--50\,m was applied to forest polygon boundaries before positive samples were drawn, to reduce mixed-pixel effects and geometric edge artefacts. The same principle was applied to the non-forest pool. The final training set comprises 39{,}904 samples (20{,}000 positive / 19{,}904 negative).
 
 % =============================================================
-% Section 2.6 - Data Leakage Screening
+% 2.6 Data Leakage Screening  (RETTET: kronologi uden regnefejl)
 % =============================================================
 \subsection{Data Leakage Screening}
 \label{sec:leakage}
 
-The initial candidate feature set comprised 23 predictors. Six were removed iteratively before model training on grounds of label leakage---where a feature's value is partly determined by the label rather than by independent conditions:
+The candidate feature set was screened iteratively for label leakage---cases where a feature's value is partly determined by the training label rather than by independent biophysical conditions. Six features were removed on these grounds:
 
 \begin{itemize}
     \item \texttt{dist\_existing\_forest}: positive samples have distance zero by definition.
     \item \texttt{lc\_dense\_vegetation}: positive pixels are dense vegetation by label construction.
     \item \texttt{lc\_field} and \texttt{lc\_shallow\_vegetation}: negative pixels are overwhelmingly fields and herbaceous cover.
-    \item \texttt{forest\_density\_500m}: a geographic correlate of the label.
+    \item \texttt{forest\_density\_500m}: a geographic correlate of the label; withheld from training and retained only as an independent context check (Section~\ref{sec:results-hotspots}).
     \item \texttt{agricultural\_value}: NaN-fill patterns create a systematic distinguisher between labelled and unlabelled pixels.
 \end{itemize}
 
 Sentinel-2 NDVI mean and standard deviation were also tested and rejected. NDVI mean for positive samples (existing forest) averaged 0.82 versus 0.64 for negatives, functioning as a spectral forest-detection signal rather than an independent suitability predictor. Including it inflated the cross-validation AUC to 0.93, with a single feature accounting for 63\,\% of model gain---a classical symptom of feature-level leakage.
 
+The Topographic Wetness Index was added after an intermediate 16-feature baseline experiment, yielding the final set of 17 predictors. Its inclusion reduced the gain-based importance of slope from 18\,\% to 10--14\,\%, consistent with the interpretation that slope had partially served as a proxy for topographic moisture gradients.
+
 A separate pipeline version (v4) that retained circular label definitions produced AUC\,=\,1.0, confirming that perfect discrimination is an artefact rather than an achievement. This version was abandoned, and the result is reported here as empirical evidence that leakage screening is essential in spatial ML workflows where training labels are derived from the same landscape the model predicts over.
 
 % =============================================================
-% Placeholder for remaining M&M sections
+% 2.7 - 2.9  (uændret fra sections_2_7_to_2_9.tex — behold dine nuværende)
 % =============================================================
-% =============================================================
-% Section 2.7 - Model Training and Spatial Cross-Validation
-% =============================================================
-\subsection{Model Training and Spatial Cross-Validation}
-\label{sec:models}
-
-Three models were trained on the same feature set and training samples to assess whether the suitability patterns are robust across different algorithms and labelling assumptions.
-
-\paragraph{LightGBM} is the primary model. It is a gradient-boosted decision tree framework that adds trees sequentially, with each new tree fitted to improve the residual errors of the previous ones \citep{ke2017lightgbm}. Hyperparameters were selected through a coarse grid search and held fixed across all cross-validation folds (Table~\ref{tab:lgbm-config}). A robustness check with more aggressive settings (lower learning rate, more leaves, longer training) produced no meaningful improvement in mean AUC under the same spatial folds; the baseline configuration was therefore retained.
-
-\begin{table}[H]
-\centering
-\caption{LightGBM training configuration. Hyperparameters were held fixed across all spatial cross-validation folds.}
-\label{tab:lgbm-config}
-\footnotesize
-\begin{tabular}{@{} l l @{}}
-\toprule
-\textbf{Parameter} & \textbf{Value} \\
-\midrule
-Objective             & \texttt{binary} (log-loss) \\
-Num leaves            & 31 \\
-Learning rate         & 0.05 \\
-Num boost rounds      & 1{,}000 (early stopping at 50) \\
-Class weighting       & \texttt{is\_unbalance = True} \\
-Tree growth           & Leaf-wise, histogram-based \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{Random Forest} was included as a supervised ensemble baseline \citep{breiman2001}. Because it builds trees independently and combines them through averaging, it has a different inductive bias from LightGBM. If both models identify similar high-suitability areas, this strengthens the interpretation that the suitability signal is present in the data rather than being an artefact of one specific algorithm.
-
-\paragraph{PU-LightGBM} was included as a sensitivity test of the negative-label assumption. In the supervised models, eligible non-forest pixels are treated as negatives. The PU variant reframes the task using positive-unlabelled learning \citep{elkan2008,bekker2020}: existing forest pixels are labelled positives, while eligible non-forest pixels are treated as unlabelled rather than confirmed negatives. Following Elkan and Noto \citep{elkan2008}, a correction factor $c$ is estimated as the mean predicted value among held-out labelled positives during cross-validation. The corrected output is interpreted as an Elkan--Noto-corrected relative suitability score rather than a calibrated probability. The PU model is not assumed to be more correct; it provides a methodological contrast showing how the suitability surface changes when non-forest land is no longer treated as definitively unsuitable.
-
-\paragraph{Spatial cross-validation.}
-All three models were evaluated using nine-fold spatial cross-validation. The folds were constructed by applying $k$-means clustering to the sample coordinates, producing geographically coherent held-out regions. In each iteration, the model was trained on eight folds and evaluated on the ninth, so that performance reflects the model's ability to generalise to unseen geographic areas rather than to spatially interleaved pixels \citep{meyer2022,roberts2017}. AUC-ROC was used as the primary metric and average precision (AP) as secondary. Per-fold AUC values were retained to inspect geographic variation in model performance.
 
 % =============================================================
-% Section 2.8 - Model Interpretation
-% =============================================================
-\subsection{Model Interpretation}
-\label{sec:shap}
-
-Feature importance was assessed using two complementary measures. Mean absolute SHAP values \citep{lundberg2017shap} quantify how strongly each predictor influences individual predictions on average, providing a model-agnostic importance ranking based on 3{,}000 sampled observations. LightGBM gain importance quantifies how much each feature contributes to improving tree splits during training. The two measures describe different aspects of the model: SHAP captures prediction behaviour, while gain captures the internal learning structure. Both are reported to support transparent interpretation in a planning context.
-
-% =============================================================
-% Section 2.9 - Hotspot Delineation
-% =============================================================
-\subsection{Hotspot Delineation}
-\label{sec:hotspots}
-
-Candidate areas were extracted from each suitability surface through a three-step post-processing chain designed to produce planning-relevant polygon outputs:
-
-\begin{enumerate}
-    \item \textit{Thresholding}: pixels above the 90th percentile of eligible suitability scores (top 10\,\%) were retained.
-    \item \textit{Morphological opening}: a 20\,m disc structuring element was applied to remove narrow slivers inconsistent with the minimum forest geometry required under BEK\,1079 \citep{bek1079_2025}.
-    \item \textit{Minimum area filter}: connected components smaller than 1\,ha were removed.
-\end{enumerate}
-
-The resulting polygons were ranked by mean suitability score, and the top-ranked subset whose cumulative area first reaches the Viborg Green Tripartite target of approximately 950\,ha was identified as the priority candidate pool. A triple-consensus zone---where all three models agree on top-decile status---was computed to provide a conservative, cross-model agreement layer for planning communication.
-% =============================================================
-% Section 3 - Results
+% Section 3 - Results  (RETTET: consensus 4,134 ha; "independent context check")
 % =============================================================
 \section{Results}
 \label{sec:results}
 
-% =============================================================
-% 3.1 Eligible Area
-% =============================================================
 \subsection{Eligible Area}
 \label{sec:results-eligible}
 
-After applying all 14 constraints (A1--A13 and B1), the remaining eligible area covers 60{,}345\,ha, corresponding to 42.1\,\% of the total municipal area of 143{,}300\,ha. The largest exclusions are existing forest (Fredskov), \S\,3 protected nature, carbon-rich lowland soils ($\geq$\,6\,\% C), and the \texttt{skov\_neg} planning designation. Figure~\ref{fig:eligibility} shows the spatial distribution of eligible and excluded land.
+After applying all constraints (A1--A12 and B1), the remaining eligible area covers 60{,}345\,ha, corresponding to 42.1\,\% of the total municipal area. The largest exclusions are existing forest (Fredskov), \S\,3 protected nature, carbon-rich lowland soils ($\geq$\,6\,\% C), and the \texttt{skov\_neg} planning designation. Soft flags (\S\,16 and \S\,19) affect approximately 0.9\,\% of the eligible area. Figure~\ref{fig:eligibility} shows the spatial distribution of eligible and excluded land.
 
-% >>> FIGUR: Eligibility mask kort.
-% Indsæt dit kort her. Engelske labels, 600+ dpi.
-%\begin{figure}[H]
-%    \centering
-%    \includegraphics[width=0.9\textwidth]{figures/eligibility_mask.png}
-%    \caption{Eligibility mask for Viborg Municipality. Eligible land (green) covers 60{,}345\,ha (42.1\,\%); excluded areas are determined by 13 legal constraints and one subsidy-based constraint.}
-%    \label{fig:eligibility}
-%\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/section_02_eligibility_mask.png}
+    \caption{Eligibility mask for Viborg Municipality. Eligible land covers 60{,}345\,ha (42.1\,\% of the municipal area); excluded land is determined by twelve hard constraints and one subsidy-based constraint under BEK\,1079.}
+    \label{fig:eligibility}
+\end{figure}
 
-% =============================================================
-% 3.2 Model Performance
-% =============================================================
 \subsection{Model Performance under Spatial Cross-Validation}
 \label{sec:results-performance}
 
@@ -453,7 +405,7 @@ LightGBM v3      & Supervised      & 0.729 & 0.059 & 0.727 & 0.097 \\
 Random Forest v3 & Supervised      & 0.727 & 0.052 & 0.727 & 0.093 \\
 PU-LightGBM v3   & Semi-supervised & 0.729$^{a}$ & 0.059 & 0.672 & 0.107 \\
 \bottomrule
-\multicolumn{6}{@{}p{13cm}@{}}{\footnotesize $^{a}$\,AUC on the PU labelling task (s-task). The Elkan--Noto correction factor was $c = 0.556$ (CV mean) / $0.776$ (full-data). Calibrated AUC(y) $= 0.716 \pm 0.056$.}\\
+\multicolumn{6}{@{}p{13cm}@{}}{\footnotesize $^{a}$\,AUC on the PU labelling task (s-task), distinguishing labelled forest pixels from unlabelled eligible non-forest pixels. The Elkan--Noto correction factor $c = P(s{=}1 \mid y{=}1)$ is the positive labelling probability, not the class prior; the CV mean was $c = 0.556$ and the full-data estimate $0.776$ (not directly comparable: out-of-sample vs.\ in-sample). The corrected AUC(y) of $0.716 \pm 0.056$ is a sanity check against the original labels, not a validation against true suitability.}\\
 \end{tabular}
 \end{table}
 
@@ -486,29 +438,20 @@ Per-fold AUC values range from 0.626 (Fold~5) to 0.829 (Fold~7) across all three
 
 The three model curves track each other closely across all nine folds, indicating that the performance variation is driven by geographic heterogeneity rather than by algorithm-specific behaviour.
 
-% =============================================================
-% 3.3 Variable Importance
-% =============================================================
 \subsection{Variable Importance}
 \label{sec:results-shap}
 
-Figure~\ref{fig:shap} shows the SHAP-based feature importance for the PU-LightGBM model. Nitrogen retention and soil type are the two most influential predictors according to mean absolute SHAP values, followed by slope, distance to power lines, TWI, and distance to streams. The gain-based ranking identifies nitrogen retention as the single most important feature for constructing tree splits (23.9\,\% of total gain), followed by distance to power lines (13.8\,\%), terrain elevation (11.1\,\%), and slope (10.0\,\%).
+Figure~\ref{fig:shap} shows the SHAP-based feature importance for the PU-LightGBM model. Soil type (mean $|$SHAP$|$ = 0.544) and nitrogen retention (0.521) are the two most influential predictors, followed by slope, distance to power lines, TWI, and distance to streams. The gain-based ranking identifies nitrogen retention as the single most important feature for constructing tree splits (23.9\,\% of total gain), followed by distance to power lines (13.8\,\%), terrain elevation (11.1\,\%), and slope (10.0\,\%).
 
-% >>> FIGUR: SHAP beeswarm + gain bar chart.
-%\begin{figure}[H]
-%    \centering
-%    \includegraphics[width=\textwidth]{figures/shap_combined.png}
-%    \caption{SHAP interpretation for PU-LightGBM v3 (3{,}000 sampled observations). Left: beeswarm plot showing direction and spread of feature effects. Right: mean absolute SHAP values.}
-%    \label{fig:shap}
-%\end{figure}
-
-The addition of TWI to the feature set reduced the gain-based importance of slope from 18\,\% in the 16-feature baseline to 10\,\% in the final 17-feature model, consistent with the interpretation that slope had partially served as a proxy for topographic moisture gradients in the absence of a dedicated wetness predictor.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/shap_pu_lightgbm_v3_combined.png}
+    \caption{SHAP interpretation for PU-LightGBM v3 (3{,}000 sampled observations). Left: beeswarm plot showing direction and spread of feature effects. Right: mean absolute SHAP values.}
+    \label{fig:shap}
+\end{figure}
 
 The difference between the SHAP and gain-based rankings is not a contradiction: gain importance describes how the model constructs its tree structure, while SHAP describes how each feature affects individual predictions. Both measures confirm that the model is primarily driven by soil conditions, nitrogen retention, terrain, wetness, and distance-based spatial context.
 
-% =============================================================
-% 3.4 Hotspots and Cross-Model Agreement
-% =============================================================
 \subsection{Hotspots and Cross-Model Agreement}
 \label{sec:results-hotspots}
 
@@ -532,10 +475,20 @@ PU-LightGBM v3   & 0.765 & 649 & 2{,}305 & 253 & 952 \\
 
 The higher p90 threshold for PU-LightGBM (0.765 vs.\ 0.607--0.614) reflects its more permissive score distribution: 5.8\,\% of eligible pixels exceed a corrected score of 0.9, compared to 0.6\,\% (LightGBM) and 0.2\,\% (Random Forest).
 
-Cross-model agreement between LightGBM and Random Forest is strong at the pixel level (Pearson $r = 0.898$, Spearman $\rho = 0.884$) but more moderate at the top-decile threshold (Jaccard $= 0.598$), indicating that the continuous suitability surfaces are highly correlated while exact candidate area boundaries remain sensitive to the classification threshold. The triple-consensus zone---where all three models agree on top-decile status---covers 4{,}529\,ha (6.8\,\% of eligible area).
+% TODO-VERIFY: Consensus-tal. Figuren (maskingenereret) siger 4,134 ha = 6.8%,
+% hvilket er internt konsistent (4,134/60,345 = 6.85%). Specialets tekst siger
+% 452,867 px = 4,529 ha men kalder det 6.8% (matematisk = 7.5%). Tjek Cell 11
+% output. Artiklen bruger figurens tal.
+Cross-model agreement between LightGBM and Random Forest is strong at the pixel level (Pearson $r = 0.898$, Spearman $\rho = 0.884$) but more moderate at the top-decile threshold (Jaccard $= 0.598$), indicating that the continuous suitability surfaces are highly correlated while exact candidate area boundaries remain sensitive to the classification threshold. The triple-consensus zone---where all three models agree on top-decile status---covers 4{,}134\,ha (6.8\,\% of eligible area).
 
-An external validation using forest density within a 500\,m moving window (withheld from model training) showed that the mean forest density within the consensus zone is 27.7\,\%, more than twice the eligible-area mean of 13.0\,\%. Eighty-two percent of consensus pixels lie in cells with local forest density exceeding 10\,\%. This convergence between the model output and an independent connectivity indicator provides external support for the interpretation that the learned suitability signal reflects genuine landscape patterns rather than training label artefacts.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figures/three_way_model_comparison.png}
+    \caption{Three-way model comparison. Upper panels: LightGBM and Random Forest suitability surfaces. Lower-left: PU-LightGBM. Lower-right: cross-model agreement; dark red pixels are in the top 10\,\% for all three models (consensus zone: 4{,}134\,ha).}
+    \label{fig:three-way}
+\end{figure}
 
+An independent landscape-context check used forest density within a 500\,m moving window---a layer deliberately withheld from model training on leakage grounds. The mean forest density within the consensus zone is 27.7\,\%, more than twice the eligible-area mean of 13.0\,\%; 82\,\% of consensus pixels lie in cells with local forest density exceeding 10\,\%. This convergence between the model output and a withheld connectivity indicator supports the interpretation that the learned suitability signal reflects genuine landscape patterns rather than training label artefacts. We describe this as a context check rather than external validation, since it does not constitute independent ground truth for afforestation suitability.
 % >>> FIGUR: Three-way model comparison + consensus map.
 %\begin{figure}[H]
 %    \centering
