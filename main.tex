@@ -30,7 +30,8 @@
 \daterevised{ }
 \dateaccepted{ }
 \datepublished{ }
-
+   \usepackage{tikz}
+   \usetikzlibrary{arrows.meta,positioning}
 %=================================================================
 % TITEL
 \Title{Screening for Afforestation Suitability with Machine Learning and Spatially Cross-Validated Models: A Municipal-Scale GeoAI Workflow for Denmark's Green Tripartite Agreement}
@@ -147,11 +148,62 @@ Viborg is used as an operational pilot rather than a unique case: the workflow r
 % rendererede figuren ikke (kun filnavnet blev vist).
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\textwidth]{figures/Summary A4 Portrait.png}
+    \includegraphics[width=0.5\textwidth]{figures/Summary A4 Portrait.png}
     \caption{Study area: Viborg Municipality in central Jutland, Denmark. Inset: location within Denmark.}
     \label{fig:study-area}
 \end{figure}
+% =============================================================
+% WORKFLOW DIAGRAM (Figure 2 — insert at the start of Section 2, Materials and Methods,
+% or wherever Jamal wants the method overview). Pure TikZ — no image file needed.
+%
+% REQUIRES in your main.tex preamble (add if not already present):
+%   \usepackage{tikz}
+%   \usetikzlibrary{arrows.meta,positioning}
+% =============================================================
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  stage/.style={rectangle, rounded corners=2pt, draw=black!55, line width=0.5pt,
+                fill=#1, text width=3.15cm, align=center, inner sep=4pt, minimum height=1.05cm},
+  arr/.style={-{Stealth[length=2.2mm]}, line width=0.7pt, draw=black!60},
+  node distance=0.6cm and 0.8cm,
+]
 
+\node[stage=blue!8]  (data) {\textbf{1. Data \& Grid}\\[2pt]
+  Danish raster/vector layers clipped to municipality; 10\,m grid, EPSG:25832};
+
+\node[stage=green!10, right=of data] (elig) {\textbf{2. Eligibility Mask}\\[2pt]
+  15 hard exclusions + B1 subsidy rule; 2 soft flags\\[2pt]
+  \textbf{60{,}507\,ha eligible (42.1\%)}};
+
+\node[stage=green!10, right=of elig] (feat) {\textbf{3. Labels \& Features}\\[2pt]
+  Existing forest = positive label; 17 leakage-screened predictors; 39{,}904 samples};
+
+\node[stage=orange!14, below=1.1cm of feat] (model) {\textbf{4. Modelling}\\[2pt]
+  LightGBM, Random Forest, PU-LightGBM; 9-fold spatial CV + SHAP};
+
+\node[stage=orange!14, left=of model] (cons) {\textbf{5. Suitability \& Consensus}\\[2pt]
+  Probability surfaces; triple-consensus zone 4{,}134\,ha (6.8\%)};
+
+\node[stage=red!8, left=of cons] (out) {\textbf{6. Planning Output}\\[2pt]
+  Hotspot polygons; parcel-level (markblok) priority candidates vs.\ 950\,ha target};
+
+\draw[arr] (data) -- (elig);
+\draw[arr] (elig) -- (feat);
+\draw[arr] (feat) -- (model);
+\draw[arr] (model) -- (cons);
+\draw[arr] (cons) -- (out);
+
+\end{tikzpicture}
+\caption{Overview of the two-stage GeoAI afforestation screening workflow. Rule-based
+eligibility (stage~2) removes legally, physically, and subsidy-constrained land before
+any model is trained; data-driven suitability modelling (stages~4--5) then ranks the
+eligible landscape, and the output is translated into parcel-level planning units
+(stage~6). Blue: data; green: rule-based screening and feature construction; orange:
+modelling and cross-model agreement; red: planning-oriented output.}
+\label{fig:workflow}
+\end{figure}
 % =============================================================
 % 2.3 Data
 % =============================================================
@@ -458,16 +510,9 @@ Candidate areas were extracted from each suitability surface through a three-ste
 
 The resulting polygons were ranked by mean suitability score, and the top-ranked subset whose cumulative area first reaches the municipal 2030 afforestation target of approximately 950\,ha \citep{viborg2022} was identified as the priority candidate pool. A triple-consensus zone---where all three models agree on top-decile status---was computed to provide a conservative, cross-model agreement layer for planning communication. Finally, to align the output with the administrative unit at which afforestation negotiations are conducted, suitability scores were aggregated to registered agricultural parcels (\textit{markblokke}, the field-block units used in national area-based agricultural administration). Parcels containing no eligible pixels were excluded; for each remaining parcel, the mean suitability over its eligible 10\,m pixels was computed. Parcels whose mean exceeded the pixel-level 90th-percentile threshold were retained as the parcel candidate pool, and a second subset was selected sequentially from the highest-ranked parcels until the cumulative eligible area reached approximately 950\,ha.
 
-% =============================================================
-% Use of Generative AI Tools
-% =============================================================
-\subsection{Use of Generative AI Tools}
-\label{sec:ai-use}
 
-During manuscript preparation, generative AI tools (ChatGPT, OpenAI; Claude, Anthropic) were used for language refinement and structural/editorial feedback on draft text. The authors reviewed and edited the resulting text and remain responsible for the scientific content, analyses, results, and interpretations.
 
-% =============================================================
-% Section 3 - Results
+
 % =============================================================
 \section{Results}
 \label{sec:results}
